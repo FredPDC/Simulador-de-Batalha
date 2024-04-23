@@ -1,0 +1,80 @@
+local utils = require "utils"
+
+local actions = {}
+
+actions.list = {}
+
+function actions.build()
+
+    actions.list = {}
+
+    local tackleAttack = {
+        descritption = "Investida.",
+        requirement = nil,
+        execute = function(playerData, creatureData)
+            local successChance = playerData.speed == 0 and 1 or creatureData.speed / playerData.speed
+            local success = math.random() <= successChance
+
+
+            local rawDamage = creatureData.attack - math.random() * playerData.defense
+            local damage = math.max(1, math.ceil(rawDamage))
+
+            if success then
+                playerData.health = playerData.health - damage
+                print(string.format("%s atacou %s e deu %d pontos de dano", creatureData.name, playerData.name, damage))
+                local healthRate = math.floor((playerData.health / playerData.maxHealth) * 10)
+                print(string.format("%s: %s", playerData.name, utils.getProgressBar(healthRate)))
+            
+            else
+                print(string.format("%s tentou atacar, mas errou.", creatureData.name))
+            end
+        end
+    }
+
+local poisonBurstAttack ={
+    descritption = "Rajada de veneno",
+    requirement = nil,
+
+    execute = function(playerData, creatureData)
+
+
+        local rawDamage = creatureData.attack - math.random() * playerData.defense
+        local damage = math.max(1, math.ceil(rawDamage * 0.3))
+
+            playerData.health = playerData.health - damage
+            print(string.format("%s soltou uma rajada de veneno e deu %d pontos de dano", creatureData.name, damage))
+            local healthRate = math.floor((playerData.health / playerData.maxHealth) * 10)
+            print(string.format("%s: %s", playerData.name, utils.getProgressBar(healthRate)))
+        
+    end
+}
+
+local roarAction ={
+    descritption = "Rugido ancestral",
+    requirement = nil,
+
+    execute = function(playerData, creatureData)
+
+            print(string.format("%s solta um rugido, que abalaria até a alma dos guerreiros mais poderosos.", creatureData.name))   
+    end
+}
+
+    actions.list[#actions.list + 1] = tackleAttack
+    actions.list[#actions.list + 1] = poisonBurstAttack
+    actions.list[#actions.list + 1] = roarAction
+end
+
+function actions.getValidActions(playerData, creatureData)
+    local validActions = {}
+    for _, action in pairs(actions.list) do
+        local requirement = action.requirement
+        local isValid = requirement == nil or requirement(playerData, creatureData)
+        if isValid then
+            validActions[#validActions+1] = action
+        end
+    end
+    return validActions
+
+end
+
+return actions
